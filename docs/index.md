@@ -1,6 +1,6 @@
-# ds-internal-package-template
+# johndemo2
 
-A template repo for internal project in data science team.
+repo for demo2.
 
 ## Contribution Workflow
 

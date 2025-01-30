@@ -21,7 +21,4 @@ jobs:
           path: .cache
       - run: pip install mkdocs-material 'mkdocstrings[python]' mike
       - run: git fetch origin gh-pages --depth=1
-      # - run: echo "LIB_VERSION=$(cat setup.py | grep __version__ -m 1 | cut -f2 -d= | cut -f 2 -d'"')" >> $GITHUB_ENV
-      # - run: echo $LIB_VERSION
-      - run: mike deploy -u latest # only committed
-      - run: mike set-default -p latest # -p to also push commits
+      - run: mkdocs gh-deploy --force
