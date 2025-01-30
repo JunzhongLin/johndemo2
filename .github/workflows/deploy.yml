@@ -1,0 +1,44 @@
+name: provision_resources
+on:
+  workflow_call:
+    inputs:
+      backend-config-path:
+        required: true
+        type: string
+      terraform-path:
+        required: true
+        type: string
+      environment:
+        required: true
+        type: string
+      common-vars-path:
+        required: true
+        type: string
+      env-vars-path:
+        required: true
+        type: string
+jobs:
+    terraform:
+        name: 'Terraform provisioning'
+        runs-on: ubuntu-latest
+        environment: ${{ inputs.environment }}
+        defaults:
+            run:
+                working-directory: ${{ inputs.terraform-path }}
+        env:
+            GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        steps:
+            - uses: actions/checkout@v4
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v1
+            - name: Terraform Init
+              run: terraform init -backend-config=${{ inputs.backend-config-path }}
+            - name: Terraform Plan
+              run: |
+                terraform plan -input=false \
+                  -var-file=<(cat ${{ inputs.common-vars-path }}; echo ""; cat ${{ inputs.env-vars-path }})
+            - name: Terraform Apply
+              if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+              run: |
+                terraform apply -auto-approve -input=false \
+                  -var-file=<(cat ${{ inputs.common-vars-path }}; echo ""; cat ${{ inputs.env-vars-path }})
