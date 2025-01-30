@@ -1,2 +1,2 @@
-# proj_gcp_template
-template repo for gcp related projects
+# demo2
+repo for demo2
