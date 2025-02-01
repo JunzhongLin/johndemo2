@@ -1,0 +1,3 @@
+pydantic==2.10.6
+google-cloud-pubsub   # TODO: need to fix the version
+google-cloud-bigquery # TODO: need to fix the version
