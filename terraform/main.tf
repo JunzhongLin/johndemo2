@@ -1,6 +1,6 @@
-# terraform {
-#   backend "gcs" {}
-# }
+terraform {
+  backend "gcs" {}
+}
 
 module "storage_bucket" {
   source     = "./modules/storage-bucket"
