@@ -11,7 +11,7 @@ def load_model() -> sklearn.dummy.DummyClassifier:
     storage_client = storage.Client()
     bucket = storage_client.get_bucket(os.environ.get("MODEL_BUCKET_NAME"))
     blob = bucket.blob(os.environ.get("MODEL_FILE_NAME"))
-    local_model_path = "./tmp/model.joblib"
+    local_model_path = "/tmp/model.pkl"
     blob.download_to_filename(local_model_path)
 
     return joblib.load(local_model_path)
