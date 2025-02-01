@@ -1,126 +1,110 @@
-# name: proj_gcp_template_pipeline
-# on:
-#   push:
-#     branches:
-#       - main
-# env:
-#     TERRAFORM-PATH: terraform
-#     BACKEND-CONFIG-PATH-DEV: conf/dev.backend.conf
-#     BACKEND-CONFIG-PATH-PROD: conf/prod.backend.conf
-#     COMMON-VARS-PATH: variables/common.tfvars
-#     DEV-VARS-PATH: variables/dev.tfvars
-#     PROD-VARS-PATH: variables/prod.tfvars
-#     REGION: europe-west1
-#     PROJECT_NAME: cloud-function-trigger-using-terraform
-#
-# jobs:
-#     set-variables:
-#         name: 'Set variables'
-#         runs-on: ubuntu-latest
-#         outputs:
-#             terraform-path: ${{ env.TERRAFORM-PATH }}
-#             backend-config-path-dev: ${{ env.BACKEND-CONFIG-PATH-DEV }}
-#             backend-config-path-prod: ${{ env.BACKEND-CONFIG-PATH-PROD }}
-#             common-vars-path: ${{ env.COMMON-VARS-PATH }}
-#             dev-vars-path: ${{ env.DEV-VARS-PATH }}
-#             prod-vars-path: ${{ env.PROD-VARS-PATH }}
-#             region: ${{ env.REGION }}
-#             project-name: ${{ env.PROJECT_NAME }}
-#         steps:
-#             - name: Set variables
-#               run: |
-#                 # add complex logic here to set variables
-#                 echo "Setting variables..."
-#                 echo "Done setting variables."
-#
-#     build_artifacts:
-#         name: 'Build artifacts'
-#         runs-on: ubuntu-latest
-#         needs: set-variables
-#         environment: share
-#         env:
-#             GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
-#             PROJECT_ID: "share-449008"
-#             REPOSITORY: "cloud-function-trigger-using-terraform"
-#         steps:
-#             - name: checkout
-#               uses: actions/checkout@v4
-#
-#             - id: "auth"
-#               uses: google-github-actions/auth@v2
-#               with:
-#                 credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
-#
-#             - name: "Set up Cloud SDK"
-#               uses: "google-github-actions/setup-gcloud@v2"
-#
-#             - name: "Use gcloud CLI"
-#               run: "gcloud info"
-#
-#             - name: "Docker auth"
-#               run: |-
-#                 gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
-#
-#             - name: "Build test image"
-#               run: |
-#                 echo "Building test image..."
-#                 docker build -f test.Dockerfile \
-#                 -t ${{ env.PROJECT_NAME }}:test .
-#                 echo "Done building test image."
-#
-#             - name: "run tests"
-#               run: |
-#                 echo "Running tests..."
-#                 docker rm ${{ env.PROJECT_NAME }}-test || true &&docker run --name ${{ env.PROJECT_NAME }}-test ${{ env.PROJECT_NAME }}:test
-#                 if [ $? -eq 0 ]
-#                 then
-#                   echo "no failures -> build docker image for deployment"
-#                 else
-#                   echo "failures -> stop build process"
-#                   exit 1
-#                 fi
-#                 echo "Done running tests."
-#
-#             - name: "get git hash"
-#               run: |
-#                 echo "SHORT_SHA=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
-#                 echo "short_sha: $SHORT_SHA"
-#
-#             - name: "Build and push deployment image"
-#               run: |
-#                 echo "Building deployment image..."
-#
-#                 GCR_IMAGE_URI_DEV=${{ env.REGION }}-docker.pkg.dev/${{env.PROJECT_ID}}/${{ env.REPOSITORY }}/${{ env.PROJECT_NAME }}:dev
-#                 GCR_IMAGE_URI_PROD=${{ env.REGION }}-docker.pkg.dev/${{env.PROJECT_ID}}/${{ env.REPOSITORY }}/${{ env.PROJECT_NAME }}:prod
-#                 GCR_IMAGE_URI_SHA=${{ env.REGION }}-docker.pkg.dev/${{env.PROJECT_ID}}/${{ env.REPOSITORY }}/${{ env.PROJECT_NAME }}:${{ env.SHORT_SHA }}
-#
-#                 docker build -f job.Dockerfile \
-#                 -t $GCR_IMAGE_URI_DEV \
-#                 -t $GCR_IMAGE_URI_PROD \
-#                 -t $GCR_IMAGE_URI_SHA \
-#                 .
-#
-#                 echo "Done building deployment image."
-#
-#                 echo "Pushing image to GCR..."
-#                 docker push $GCR_IMAGE_URI_DEV
-#                 docker push $GCR_IMAGE_URI_PROD
-#                 docker push $GCR_IMAGE_URI_SHA
-#                 echo "Done pushing image to GCR."
-#
-#
-#     provision_to_dev:
-#         needs:
-#             - set-variables
-#             - build_artifacts
-#         uses: ./.github/workflows/deploy.yml
-#         with:
-#             backend-config-path: ${{ needs.set-variables.outputs.backend-config-path-dev }}
-#             terraform-path: ${{ needs.set-variables.outputs.terraform-path }}
-#             common-vars-path: ${{ needs.set-variables.outputs.common-vars-path }}
-#             env-vars-path: ${{ needs.set-variables.outputs.dev-vars-path }}
-#             environment: dev
-#         secrets: inherit
+name: proj_gcp_template_pipeline
+on:
+  push:
+    branches:
+      - main
+env:
+    TERRAFORM-PATH: terraform
+    BACKEND-CONFIG-PATH-DEV: conf/dev.backend.conf
+    BACKEND-CONFIG-PATH-PROD: conf/prod.backend.conf
+    COMMON-VARS-PATH: variables/common.tfvars
+    DEV-VARS-PATH: variables/dev.tfvars
+    PROD-VARS-PATH: variables/prod.tfvars
+    REGION: europe-west1
+    PROJECT_NAME: johndemo2
+jobs:
+    set-variables:
+        name: 'Set variables'
+        runs-on: ubuntu-latest
+        outputs:
+            terraform-path: ${{ env.TERRAFORM-PATH }}
+            backend-config-path-dev: ${{ env.BACKEND-CONFIG-PATH-DEV }}
+            backend-config-path-prod: ${{ env.BACKEND-CONFIG-PATH-PROD }}
+            common-vars-path: ${{ env.COMMON-VARS-PATH }}
+            dev-vars-path: ${{ env.DEV-VARS-PATH }}
+            prod-vars-path: ${{ env.PROD-VARS-PATH }}
+            region: ${{ env.REGION }}
+            project-name: ${{ env.PROJECT_NAME }}
+        steps:
+            - name: Set variables
+              run: |
+                # add complex logic here to set variables
+                echo "Setting variables..."
+                echo "Done setting variables."
+    build_artifacts:
+        name: 'Build artifacts'
+        runs-on: ubuntu-latest
+        needs: set-variables
+        environment: share
+        env:
+            GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+            PROJECT_ID: "share-449008"
+            REPOSITORY: "cloud-function-trigger-using-terraform"
+        steps:
+            - name: checkout
+              uses: actions/checkout@v4
+            - id: "auth"
+              uses: google-github-actions/auth@v2
+              with:
+                credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
+            - name: "Set up Cloud SDK"
+              uses: "google-github-actions/setup-gcloud@v2"
+            - name: "Use gcloud CLI"
+              run: "gcloud info"
+            - name: "Docker auth"
+              run: |-
+                gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+            - name: "Build test image"
+              run: |
+                echo "Building test image..."
+                docker build -f test.Dockerfile \
+                -t ${{ env.PROJECT_NAME }}:test .
+                echo "Done building test image."
+            - name: "run tests"
+              run: |
+                echo "Running tests..."
+                docker rm ${{ env.PROJECT_NAME }}-test || true &&docker run --name ${{ env.PROJECT_NAME }}-test ${{ env.PROJECT_NAME }}:test
+                if [ $? -eq 0 ]
+                then
+                  echo "no failures -> build docker image for deployment"
+                else
+                  echo "failures -> stop build process"
+                  exit 1
+                fi
+                echo "Done running tests."
+            - name: "get git hash"
+              run: |
+                echo "SHORT_SHA=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
+                echo "short_sha: $SHORT_SHA"
+            - name: "Build and push deployment image"
+              run: |
+                echo "Building deployment image..."
+                GCR_IMAGE_URI_DEV=${{ env.REGION }}-docker.pkg.dev/${{env.PROJECT_ID}}/${{ env.REPOSITORY }}/${{ env.PROJECT_NAME }}:dev
+                GCR_IMAGE_URI_PROD=${{ env.REGION }}-docker.pkg.dev/${{env.PROJECT_ID}}/${{ env.REPOSITORY }}/${{ env.PROJECT_NAME }}:prod
+                GCR_IMAGE_URI_SHA=${{ env.REGION }}-docker.pkg.dev/${{env.PROJECT_ID}}/${{ env.REPOSITORY }}/${{ env.PROJECT_NAME }}:${{ env.SHORT_SHA }}
+                docker build -f job.Dockerfile \
+                -t $GCR_IMAGE_URI_DEV \
+                -t $GCR_IMAGE_URI_PROD \
+                -t $GCR_IMAGE_URI_SHA \
+                .
+                echo "Done building deployment image."
+                echo "Pushing image to GCR..."
+                docker push $GCR_IMAGE_URI_DEV
+                docker push $GCR_IMAGE_URI_PROD
+                docker push $GCR_IMAGE_URI_SHA
+                echo "Done pushing image to GCR."
+    provision_to_dev:
+        needs:
+            - set-variables
+            - build_artifacts
+        uses: ./.github/workflows/deploy.yml
+        with:
+            backend-config-path: ${{ needs.set-variables.outputs.backend-config-path-dev }}
+            terraform-path: ${{ needs.set-variables.outputs.terraform-path }}
+            common-vars-path: ${{ needs.set-variables.outputs.common-vars-path }}
+            env-vars-path: ${{ needs.set-variables.outputs.dev-vars-path }}
+            environment: dev
+        secrets: inherit
 #
 #     provision_to_prod:
 #         needs:

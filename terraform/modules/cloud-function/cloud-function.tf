@@ -1,6 +1,6 @@
 data "archive_file" "source" {
   type        = "zip"
-  source_dir  = "${path.root}/../src"
+  source_dir  = "${path.root}/../src/cloud_function"
   output_path = "${path.root}/function.zip"
 }
 
@@ -15,18 +15,36 @@ resource "google_storage_bucket_object" "zip" {
   ]
 }
 
-resource "google_cloudfunctions_function" "cloud_function" {
-  name                  = "Cloud-function-trigger-using-terraform"
-  description           = "Cloud-function will get trigger once file is uploaded in ${var.input_bucket_name}"
-  runtime               = "python39"
+resource "google_cloudfunctions2_function" "cloud_function" {
+  name                  = "Cloud-function-predict-and-send-email"
+  description           = "Cloud-function will get trigger by the pubsub topic"
   project               = var.project_id
-  region                = var.region
-  source_archive_bucket = var.cloud_function_bucket_name
-  source_archive_object = google_storage_bucket_object.zip.name
-  entry_point           = "fileUpload"
+  location                = var.region
+  build_config {
+    runtime = "python311"
+    entry_point = "main"
+    source {
+      storage_source {
+        bucket = var.cloud_function_bucket_name
+        object = google_storage_bucket_object.zip.name
+      }
+    }
+  }
+  service_config {
+    max_instance_count  = 2
+    available_memory    = "256M" # TODO: avoid hardcoding
+    timeout_seconds     = 60
+    environment_variables = {
+      MODEL_BUCKET_NAME = var.model_bucket_name
+      MODEL_FILE_NAME = var.model_file_name
+    }
+    service_account_email = var.cloud_function_sa_email
+  }
   event_trigger {
-    event_type = "google.storage.object.finalize"
-    resource   = var.input_bucket_name
+    trigger_region = var.region
+    event_type     = "google.cloud.pubsub.topic.v1.messagePublished"
+    pubsub_topic   = var.pubsub_topic_id
+    retry_policy   = "RETRY_POLICY_RETRY"
   }
   depends_on = [
     var.cloud_function_bucket_depends_on,
