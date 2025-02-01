@@ -1,6 +1,6 @@
 data "archive_file" "source" {
   type        = "zip"
-  source_dir  = "${path.root}/../src"
+  source_dir  = "${path.root}/../src/cloud_function"
   output_path = "${path.root}/function.zip"
 }
 
