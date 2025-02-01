@@ -15,9 +15,7 @@ def get_locations() -> List[str]:
     query = """
     SELECT location
     FROM `{}`
-    """.format(
-        os.environ.get("LOCATIONS_MATERIALIZED_VIEW")
-    )
+    """.format(os.environ.get("LOCATIONS_MATERIALIZED_VIEW"))
     query_job = client.query(query)
     rows = query_job.result()
     return [row.location for row in rows]
@@ -39,9 +37,7 @@ def get_customer_data() -> bigquery.table.RowIterator:
     query = """
     SELECT customer_id, name, location, mail, input
     FROM `{}`
-    """.format(
-        os.environ.get("CUSTOMERS_TABLE")
-    )
+    """.format(os.environ.get("CUSTOMERS_TABLE"))
     query_job = client.query(query)
     rows = query_job.result()
     return rows
@@ -85,14 +81,14 @@ def main() -> None:
     for row in get_customer_data():
         try:
             customer = dict(row)
-            customer["weather"] = weather_data[customer["location"]]
+            customer.update(weather_data[customer["location"]])
             publish_to_pubsub(customer)
             publish_futures.append(publish_to_pubsub(customer))
         except Exception as e:
             print(f"Failed to publish msg immediately with Error: {e}")
         finally:
             msg_counter += 1
-            if msg_counter % msg_chunk_size == 0:
+            if msg_counter % int(msg_chunk_size) == 0:
                 # wait for the previous chunk to complete
                 futures.wait(publish_futures, return_when=futures.ALL_COMPLETED)
                 publish_futures = []
