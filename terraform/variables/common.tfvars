@@ -5,3 +5,5 @@ msg_chunk_size = 5
 dataset_id = "johndemo2"
 customers_table_name = "customers"
 locations_view_name = "locations"
+model_bucket_name = "fake_model_johnlin"
+model_file_name = "models/model.pkl"

@@ -37,3 +37,11 @@ variable "query" {
 variable "locations_view_name" {
   type = string
 }
+
+variable "model_bucket_name" {
+  type = string
+}
+
+variable "model_file_name" {
+  type = string
+}

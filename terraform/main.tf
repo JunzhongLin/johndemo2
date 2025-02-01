@@ -15,6 +15,10 @@ module "cloud_function" {
   cloud_function_bucket_name       = module.storage_bucket.cloud_function_bucket_name
   input_bucket_name                = module.storage_bucket.input_bucket_name
   cloud_function_bucket_depends_on = [module.storage_bucket.cloud_function_bucket_name]
+  model_bucket_name                = var.model_bucket_name
+  model_file_name                  = var.model_file_name
+  cloud_function_sa_email          = module.service_account.cloud_function_sa_email
+  pubsub_topic_id                  = module.pubsub.msg_input_topic_id
 }
 
 module "pubsub" {
